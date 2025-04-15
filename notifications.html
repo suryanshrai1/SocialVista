@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-white shadow">
+    <h1 class="text-2xl font-bold text-gray-800">All Notifications</h1>
+    <a href="index.html" class="text-gray-500 hover:text-gray-800">← Back to Dashboard</a>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex justify-center mt-6">
+    <section class="w-full max-w-2xl bg-white p-6 rounded shadow">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Notification History</h3>
+        <button onclick="clearAllNotifications()" class="px-3 py-1 text-sm bg-red-100 text-red-600 rounded hover:bg-red-200">
+          Clear All
+        </button>
+      </div>
+      <ul id="notificationList" class="space-y-2">
+        <!-- Notifications go here -->
+      </ul>
+    </section>
+  </main>
+
+  <!-- Script -->
+  <script>
+    function loadNotifications() {
+      const storedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+      const list = document.getElementById("notificationList");
+      list.innerHTML = "";
+
+      // Most recent first
+      storedNotifications.slice().reverse().forEach((entry, index) => {
+        const li = document.createElement("li");
+        li.className = "flex justify-between items-start bg-gray-50 p-3 rounded shadow-sm";
+
+        const message = typeof entry === "string" ? entry : entry.message;
+        const timestamp = typeof entry === "object" && entry.timestamp
+          ? new Date(entry.timestamp).toLocaleString()
+          : "Unknown time";
+
+        const textContainer = document.createElement("div");
+        textContainer.innerHTML = `<span class="font-medium">${message}</span><br><small class="text-gray-500">${timestamp}</small>`;
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️";
+        delBtn.className = "ml-4 text-red-500 hover:text-red-700";
+        delBtn.onclick = () => deleteNotification(index);
+
+        li.appendChild(textContainer);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    function deleteNotification(indexFromEnd) {
+      const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+      notifications.splice(notifications.length - 1 - indexFromEnd, 1); // remove correct item
+      localStorage.setItem("notifications", JSON.stringify(notifications));
+      loadNotifications();
+    }
+
+    function clearAllNotifications() {
+      if (confirm("Are you sure you want to delete all notifications?")) {
+        localStorage.removeItem("notifications");
+        loadNotifications();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadNotifications);
+  </script>
+
+</body>
+
+</html>

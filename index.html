@@ -27,9 +27,8 @@
     <aside class="w-64 bg-white h-screen shadow hidden sm:block">
       <nav class="p-4">
         <ul class="space-y-4">
-          <li><a href="#" class="nav-link">Home</a></li>
-          <li><a href="#" class="nav-link">Stats</a></li>
-          <li><a href="#" class="nav-link">Notifications</a></li>
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="notifications.html" class="nav-link">Notifications</a></li>
           <li><a href="#" class="nav-link">Settings</a></li>
         </ul>
       </nav>
@@ -73,13 +72,11 @@
         </div>
       </section>
 
-      <!-- Notifications -->
+      <!-- Recent Notifications -->
       <section class="bg-white p-4 rounded shadow">
         <h3 class="text-lg font-bold mb-4">Recent Notifications</h3>
-        <ul class="space-y-2">
-          <li class="text-gray-700">📢 New follower: <strong>@alex</strong></li>
-          <li class="text-gray-700">❤️ Post #32 reached 1k likes</li>
-          <li class="text-gray-700">💬 You have a new comment on your story</li>
+        <ul id="notificationList" class="space-y-2">
+          <!-- Dynamic notifications will be inserted here -->
         </ul>
       </section>
     </main>
