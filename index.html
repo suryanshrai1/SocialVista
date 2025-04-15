@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Media Dashboard</title>
+
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-white shadow">
+    <h1 class="text-2xl font-bold text-gray-800">Social Media Dashboard</h1>
+    <img src="https://i.pravatar.cc/40" alt="User Avatar" class="rounded-full w-10 h-10">
+  </header>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white h-screen shadow hidden sm:block">
+      <nav class="p-4">
+        <ul class="space-y-4">
+          <li><a href="#" class="nav-link">Home</a></li>
+          <li><a href="#" class="nav-link">Stats</a></li>
+          <li><a href="#" class="nav-link">Notifications</a></li>
+          <li><a href="#" class="nav-link">Settings</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 space-y-6">
+      <!-- Profile Card -->
+      <section class="flex items-center space-x-4 bg-white p-4 rounded shadow">
+        <img src="https://i.pravatar.cc/60" class="rounded-full w-16 h-16" alt="Profile Picture">
+        <div>
+          <h2 class="text-xl font-semibold">John Doe</h2>
+          <p class="text-gray-500">Influencer & Content Creator</p>
+        </div>
+      </section>
+
+      <!-- Charts Grid -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Followers Chart -->
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-bold mb-2">Followers Over Time</h3>
+          <canvas id="followersChart" height="120"></canvas>
+        </div>
+
+        <!-- Likes Chart -->
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-bold mb-2">Likes Over Time</h3>
+          <canvas id="likesChart" height="120"></canvas>
+        </div>
+
+        <!-- Posts Chart -->
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-bold mb-2">Posts Over Time</h3>
+          <canvas id="postsChart" height="120"></canvas>
+        </div>
+
+        <!-- Engagement Chart -->
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-bold mb-2">Engagement Rate</h3>
+          <canvas id="engagementChart" height="120"></canvas>
+        </div>
+      </section>
+
+      <!-- Notifications -->
+      <section class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold mb-4">Recent Notifications</h3>
+        <ul class="space-y-2">
+          <li class="text-gray-700">📢 New follower: <strong>@alex</strong></li>
+          <li class="text-gray-700">❤️ Post #32 reached 1k likes</li>
+          <li class="text-gray-700">💬 You have a new comment on your story</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
