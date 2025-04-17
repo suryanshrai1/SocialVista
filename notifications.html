@@ -32,30 +32,32 @@
     </section>
   </main>
 
-  <!-- Script -->
   <script>
     function loadNotifications() {
       const storedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
       const list = document.getElementById("notificationList");
       list.innerHTML = "";
 
+      if (storedNotifications.length === 0) {
+        list.innerHTML = '<p class="text-gray-500 text-center py-4">No notifications yet</p>';
+        return;
+      }
+
       // Most recent first
-      storedNotifications.slice().reverse().forEach((entry, index) => {
+      storedNotifications.slice().reverse().forEach((notif, index) => {
         const li = document.createElement("li");
         li.className = "flex justify-between items-start bg-gray-50 p-3 rounded shadow-sm";
 
-        const message = typeof entry === "string" ? entry : entry.message;
-        const timestamp = typeof entry === "object" && entry.timestamp
-          ? new Date(entry.timestamp).toLocaleString()
-          : "Unknown time";
-
         const textContainer = document.createElement("div");
-        textContainer.innerHTML = `<span class="font-medium">${message}</span><br><small class="text-gray-500">${timestamp}</small>`;
+        textContainer.innerHTML = `
+          <span class="font-medium">${notif.message}</span><br>
+          <small class="text-gray-500">${new Date(notif.timestamp).toLocaleString()}</small>
+        `;
 
         const delBtn = document.createElement("button");
-        delBtn.textContent = "🗑️";
+        delBtn.innerHTML = '🗑️';
         delBtn.className = "ml-4 text-red-500 hover:text-red-700";
-        delBtn.onclick = () => deleteNotification(index);
+        delBtn.onclick = () => deleteNotification(notif.id);
 
         li.appendChild(textContainer);
         li.appendChild(delBtn);
@@ -63,16 +65,17 @@
       });
     }
 
-    function deleteNotification(indexFromEnd) {
+    function deleteNotification(id) {
       const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-      notifications.splice(notifications.length - 1 - indexFromEnd, 1); // remove correct item
-      localStorage.setItem("notifications", JSON.stringify(notifications));
+      const updatedNotifications = notifications.filter(n => n.id !== id);
+      localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
       loadNotifications();
     }
 
     function clearAllNotifications() {
       if (confirm("Are you sure you want to delete all notifications?")) {
-        localStorage.removeItem("notifications");
+        localStorage.setItem("notifications", JSON.stringify([]));
+        localStorage.setItem("lastClearTime", new Date().toISOString());
         loadNotifications();
       }
     }

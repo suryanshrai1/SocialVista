@@ -1,36 +1,95 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHexdsbQDgTmda1GPmOIbpB0t1RICFizEimt-SVuVur__Y-5pEA4ZIEEm-BiGP_5ITk24ZYn_8KMwS/pub?output=csv";
 
+// Load and display notifications in the dashboard
+function loadDashboardNotifications() {
+  let notifications = [];
+  try {
+    notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  } catch (e) {
+    console.warn("Error reading notifications from localStorage. Resetting...");
+    localStorage.removeItem("notifications");
+  }
+
+  const list = document.getElementById("notificationList");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  // Show only the 5 most recent notifications
+  notifications.slice(-5).reverse().forEach(notif => {
+    const li = document.createElement("li");
+    li.className = "text-gray-700 font-medium bg-gray-50 p-3 rounded";
+    li.innerHTML = `
+      <span>${notif.message}</span><br>
+      <small class="text-gray-500">${new Date(notif.timestamp).toLocaleString()}</small>
+    `;
+    list.appendChild(li);
+  });
+}
+
+// Create a new notification
+function createNotification(message) {
+  let notifications = [];
+  try {
+    notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  } catch (e) {
+    notifications = [];
+  }
+
+  const newNotification = {
+    id: Date.now().toString(),
+    message: message,
+    timestamp: new Date().toISOString()
+  };
+
+  notifications.push(newNotification);
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+  loadDashboardNotifications();
+}
+
 fetch(sheetURL)
   .then(res => res.text())
   .then(csv => {
     const rows = csv.trim().split("\n");
-    const labels = [];
-    const followers = [];
-    const likes = [];
-    const posts = [];
-    const engagement = [];
-
-    rows.slice(1).forEach(row => {
-      const cols = row.split(",");
-      labels.push(cols[0]);
-      followers.push(parseInt(cols[1]));
-      likes.push(parseInt(cols[2]));
-      posts.push(parseInt(cols[3]));
-      engagement.push(parseFloat(cols[4]));
+    const data = rows.slice(1).reduce((acc, row) => {
+      const [date, followers, likes, posts, engagement] = row.split(",");
+      return {
+        labels: [...acc.labels, date],
+        followers: [...acc.followers, parseInt(followers)],
+        likes: [...acc.likes, parseInt(likes)],
+        posts: [...acc.posts, parseInt(posts)],
+        engagement: [...acc.engagement, parseFloat(engagement)]
+      };
+    }, {
+      labels: [],
+      followers: [],
+      likes: [],
+      posts: [],
+      engagement: []
     });
 
+    // Reset localStorage if not enough data
+    if (data.labels.length < 2) {
+      localStorage.removeItem("lastProcessedState");
+      localStorage.removeItem("notifications");
+      return;
+    }
+
     // Chart rendering
-    function createChart(ctxId, label, data, color) {
-      const ctx = document.getElementById(ctxId).getContext('2d');
+    function createChart(ctxId, label, dataSet, color) {
+      const ctx = document.getElementById(ctxId)?.getContext('2d');
+      if (!ctx) return;
+
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: data.labels,
           datasets: [{
             label: label,
-            data: data,
-            backgroundColor: `${color}20`,
+            data: dataSet,
+            backgroundColor: `${color}33`,
             borderColor: color,
+            pointBackgroundColor: color,
             borderWidth: 2,
             fill: true,
             tension: 0.4
@@ -48,62 +107,94 @@ fetch(sheetURL)
       });
     }
 
-    createChart('followersChart', 'Followers', followers, 'rgba(59, 130, 246, 1)');
-    createChart('likesChart', 'Likes', likes, 'rgba(16, 185, 129, 1)');
-    createChart('postsChart', 'Posts', posts, 'rgba(251, 191, 36, 1)');
-    createChart('engagementChart', 'Engagement', engagement, 'rgba(244, 63, 94, 1)');
+    // Render all 4 charts
+    createChart('followersChart', 'Followers', data.followers, '#3b82f6');
+    createChart('likesChart', 'Likes', data.likes, '#10b981');
+    createChart('postsChart', 'Posts', data.posts, '#f59e0b');
+    createChart('engagementChart', 'Engagement', data.engagement, '#ef4444');
 
-    // Notification tracking
-    const lastStats = JSON.parse(localStorage.getItem("lastStats")) || {};
-    const allNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+    // Safe access to localStorage for state
+    // Get the last 2 rows (latest and second latest)
+const latestRow = rows.at(-1);
+const prevRow = rows.at(-2);
 
-    const latest = {
-      followers: followers.at(-1),
-      likes: likes.at(-1),
-      posts: posts.at(-1),
-      engagement: engagement.at(-1)
-    };
+// Use full latest row as a unique key
+const rowHash = latestRow;
 
-    const newNotifs = [];
+// Compare to last processed row hash
+let lastRowHash = localStorage.getItem("lastRowHash");
 
-    if (lastStats.followers !== undefined && latest.followers !== lastStats.followers) {
-      const diff = latest.followers - lastStats.followers;
-      newNotifs.push(`📈 Followers ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+// Only proceed if the latest row is different
+if (rowHash !== lastRowHash) {
+  const [_, followers, likes, posts, engagement] = latestRow.split(",");
+  const [__, prevFollowers, prevLikes, prevPosts, prevEngagement] = prevRow.split(",");
+
+  const currentState = {
+    followers: parseInt(followers),
+    likes: parseInt(likes),
+    posts: parseInt(posts),
+    engagement: parseFloat(parseFloat(engagement).toFixed(1))
+  };
+
+  const previousState = {
+    followers: parseInt(prevFollowers),
+    likes: parseInt(prevLikes),
+    posts: parseInt(prevPosts),
+    engagement: parseFloat(parseFloat(prevEngagement).toFixed(1))
+  };
+
+  if (currentState.followers !== previousState.followers) {
+    const diff = currentState.followers - previousState.followers;
+    createNotification(`📈 Followers ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+  }
+
+  if (currentState.likes !== previousState.likes) {
+    const diff = currentState.likes - previousState.likes;
+    createNotification(`❤️ Likes ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+  }
+
+  if (currentState.posts !== previousState.posts) {
+    const diff = currentState.posts - previousState.posts;
+    createNotification(`📝 Posts ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+  }
+
+  if (currentState.engagement !== previousState.engagement) {
+    const diff = (currentState.engagement - previousState.engagement).toFixed(1);
+    createNotification(`📊 Engagement ${diff > 0 ? 'rose' : 'dropped'} by ${Math.abs(diff)}%`);
+  }
+
+  // ✅ Save row hash to prevent duplicate processing
+  localStorage.setItem("lastRowHash", rowHash);
+}
+
+
+
+    // Detect genuine changes (not just reload)
+    if (!lastProcessedState || JSON.stringify(currentState) !== JSON.stringify(lastProcessedState)) {
+      if (currentState.followers !== previousState.followers) {
+        const diff = currentState.followers - previousState.followers;
+        createNotification(`📈 Followers ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+      }
+
+      if (currentState.likes !== previousState.likes) {
+        const diff = currentState.likes - previousState.likes;
+        createNotification(`❤️ Likes ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+      }
+
+      if (currentState.posts !== previousState.posts) {
+        const diff = currentState.posts - previousState.posts;
+        createNotification(`📝 Posts ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
+      }
+
+      if (currentState.engagement !== previousState.engagement) {
+        const diff = (currentState.engagement - previousState.engagement).toFixed(1);
+        createNotification(`📊 Engagement ${diff > 0 ? 'rose' : 'dropped'} by ${Math.abs(diff)}%`);
+      }
+
+      localStorage.setItem("lastProcessedState", JSON.stringify(currentState));
     }
 
-    if (lastStats.likes !== undefined && latest.likes !== lastStats.likes) {
-      const diff = latest.likes - lastStats.likes;
-      newNotifs.push(`❤️ Likes ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
-    }
-
-    if (lastStats.posts !== undefined && latest.posts !== lastStats.posts) {
-      const diff = latest.posts - lastStats.posts;
-      newNotifs.push(`📝 Posts ${diff > 0 ? 'increased' : 'decreased'} by ${Math.abs(diff)}`);
-    }
-
-    if (lastStats.engagement !== undefined && latest.engagement !== lastStats.engagement) {
-      const diff = (latest.engagement - lastStats.engagement).toFixed(1);
-      newNotifs.push(`📊 Engagement ${diff > 0 ? 'rose' : 'dropped'} by ${Math.abs(diff)}%`);
-    }
-
-    // Save all new notifications with timestamps
-    const timestamped = newNotifs.map(msg => ({
-      message: msg,
-      timestamp: new Date().toISOString()
-    }));
-
-    const updatedNotifications = [...allNotifications, ...timestamped];
-    localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
-    localStorage.setItem("lastStats", JSON.stringify(latest));
-
-    // Update the Recent Notifications section (show most recent one only)
-    const notifList = document.getElementById("notificationList");
-    if (timestamped.length > 0 && notifList) {
-      const latestNotif = timestamped.at(-1);
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="font-medium">${latestNotif.message}</span><br><small class="text-gray-500">${new Date(latestNotif.timestamp).toLocaleString()}</small>`;
-      li.className = "text-gray-700 font-medium";
-      notifList.appendChild(li);
-    }
+    // Initial notification list
+    loadDashboardNotifications();
   })
   .catch(err => console.error("Error loading data:", err));
