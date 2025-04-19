@@ -34,7 +34,7 @@
 
 ## 📷 Screenshots
 
-![UI](image.png)
+![UI](image.png) | ![Notifications](image-1.png)
 
 ---
 
