@@ -5,29 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings | Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enable class-based dark mode
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex">
+<body class="min-h-screen flex transition-colors duration-300">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-white p-6 shadow">
+  <aside class="w-64 bg-white dark:bg-gray-800 p-6 shadow text-gray-700 dark:text-gray-200">
     <h2 class="text-xl font-bold mb-6">📊 Dashboard</h2>
     <ul class="space-y-4">
-      <li><a href="index.html" class="block text-gray-700">🏠 Home</a></li>
-      <li><a href="stats.html" class="block text-gray-700">📈 Stats</a></li>
-      <li><a href="notifications.html" class="block text-gray-700">🔔 Notifications</a></li>
-      <li><a href="settings.html" class="block text-blue-600 font-bold">⚙️ Settings</a></li>
+      <li><a href="index.html" class="block">🏠 Home</a></li>
+      <li><a href="stats.html" class="block">📈 Stats</a></li>
+      <li><a href="notifications.html" class="block">🔔 Notifications</a></li>
+      <li><a href="settings.html" class="block text-blue-600 dark:text-blue-400 font-bold">⚙️ Settings</a></li>
     </ul>
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8">
+  <main class="flex-1 p-8 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
     <h1 class="text-2xl font-bold mb-4">⚙️ Settings</h1>
 
-    <div class="bg-white p-6 rounded shadow-md max-w-xl space-y-6">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded shadow-md max-w-xl space-y-6">
       <!-- Theme Toggle -->
       <div>
         <label class="block font-medium mb-2">Theme</label>
-        <select id="themeSelect" class="w-full p-2 border rounded">
+        <select id="themeSelect" class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white">
           <option value="light">🌞 Light</option>
           <option value="dark">🌙 Dark</option>
         </select>
@@ -43,14 +49,17 @@
   </main>
 
   <script>
-    // Load saved theme
     const themeSelect = document.getElementById('themeSelect');
     const savedTheme = localStorage.getItem('theme') || 'light';
+
+    // Apply saved theme
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     themeSelect.value = savedTheme;
 
     themeSelect.addEventListener('change', () => {
-      localStorage.setItem('theme', themeSelect.value);
-      alert("Theme preference saved! Reload the page to see it in action.");
+      const theme = themeSelect.value;
+      localStorage.setItem('theme', theme);
+      document.documentElement.classList.toggle('dark', theme === 'dark');
     });
 
     // Reset notifications
