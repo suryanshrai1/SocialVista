@@ -16,6 +16,9 @@
 - **Hover** over chart segments to see **percentage** of total spend
 - Auto-updates with every transaction addition or deletion
 
+### 📊 Profile Data
+- Auto-fetches profile data (such as username, profile picture etc) and updates at realtime.
+
 ### 🌓 Theme Toggle
 - Supports **light** and **dark** mode with a sleek toggle switch
 - Theme preference is saved in `localStorage` and persists across sessions
