@@ -1,5 +1,6 @@
 const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHexdsbQDgTmda1GPmOIbpB0t1RICFizEimt-SVuVur__Y-5pEA4ZIEEm-BiGP_5ITk24ZYn_8KMwS/pub?output=csv";
 
+
 // 🌓 Apply theme on load
 function applyTheme() {
   const theme = localStorage.getItem("theme");
@@ -15,7 +16,7 @@ function applyTheme() {
   }
 }
 
-// 🌙 Listen to toggle change
+// 🌙 Theme toggle listener
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("themeToggle");
   applyTheme();
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 🔔 Load and display notifications
+// 🔔 Load notifications
 function loadDashboardNotifications() {
   let notifications = [];
   try {
@@ -49,7 +50,6 @@ function loadDashboardNotifications() {
 
   list.innerHTML = "";
 
-  // Show only the 5 most recent notifications
   notifications.slice(-5).reverse().forEach(notif => {
     const li = document.createElement("li");
     li.className = "text-gray-700 font-medium bg-gray-50 p-3 rounded dark:text-gray-200 dark:bg-gray-700";
@@ -81,13 +81,16 @@ function createNotification(message) {
   loadDashboardNotifications();
 }
 
-// 📊 Fetch and process data
-fetch(sheetURL)
-  .then(res => res.text())
-  .then(csv => {
-    const rows = csv.trim().split("\n");
+// 📊 Fetch and process data using PapaParse
+Papa.parse(sheetURL, {
+  download: true,
+  header: false,
+  complete: function (results) {
+    const rows = results.data.filter(row => row.length >= 7);
+
+    // Header: username,image,date,followers,likes,posts,engagement
     const data = rows.slice(1).reduce((acc, row) => {
-      const [date, followers, likes, posts, engagement] = row.split(",");
+      const [_, __, date, followers, likes, posts, engagement] = row;
       return {
         labels: [...acc.labels, date],
         followers: [...acc.followers, parseInt(followers)],
@@ -104,11 +107,28 @@ fetch(sheetURL)
     });
 
     if (data.labels.length < 2) {
-      localStorage.removeItem("lastProcessedState");
+      localStorage.removeItem("lastRowHash");
       localStorage.removeItem("notifications");
       return;
     }
 
+    // 🔄 Update username and profile picture from the first row
+    const [username, profilePicURL] = rows[1];
+    const usernameElem = document.getElementById("profile-name");
+    const profileImgElem = document.getElementById("profile-img");
+    
+    if (usernameElem) usernameElem.textContent = username;
+    
+    // Ensure the profile image is fetched from Imgur and displayed correctly
+    if (usernameElem) usernameElem.textContent = username;
+
+    if (profileImgElem) {
+      // Fix the image link using a proxy to avoid 403 from Imgur
+      profileImgElem.src = `https://images.weserv.nl/?url=${encodeURIComponent(profilePicURL.replace(/^https?:\/\//, ''))}`;
+    }
+    
+
+    // 📈 Chart rendering
     function createChart(ctxId, label, dataSet, color) {
       const ctx = document.getElementById(ctxId)?.getContext('2d');
       if (!ctx) return;
@@ -145,26 +165,25 @@ fetch(sheetURL)
     createChart('postsChart', 'Posts', data.posts, '#f59e0b');
     createChart('engagementChart', 'Engagement', data.engagement, '#ef4444');
 
+    // 🔍 Compare last 2 entries
     const latestRow = rows.at(-1);
     const prevRow = rows.at(-2);
-    const rowHash = latestRow;
-    let lastRowHash = localStorage.getItem("lastRowHash");
 
-    const [_, followers, likes, posts, engagement] = latestRow.split(",");
-    const [__, prevFollowers, prevLikes, prevPosts, prevEngagement] = prevRow.split(",");
+    const rowHash = latestRow.join(",");
+    const lastRowHash = localStorage.getItem("lastRowHash");
 
     const currentState = {
-      followers: parseInt(followers),
-      likes: parseInt(likes),
-      posts: parseInt(posts),
-      engagement: parseFloat(parseFloat(engagement).toFixed(1))
+      followers: parseInt(latestRow[3]),
+      likes: parseInt(latestRow[4]),
+      posts: parseInt(latestRow[5]),
+      engagement: parseFloat(parseFloat(latestRow[6]).toFixed(1))
     };
 
     const previousState = {
-      followers: parseInt(prevFollowers),
-      likes: parseInt(prevLikes),
-      posts: parseInt(prevPosts),
-      engagement: parseFloat(parseFloat(prevEngagement).toFixed(1))
+      followers: parseInt(prevRow[3]),
+      likes: parseInt(prevRow[4]),
+      posts: parseInt(prevRow[5]),
+      engagement: parseFloat(parseFloat(prevRow[6]).toFixed(1))
     };
 
     if (rowHash !== lastRowHash) {
@@ -192,5 +211,8 @@ fetch(sheetURL)
     }
 
     loadDashboardNotifications();
-  })
-  .catch(err => console.error("Error loading data:", err));
+  },
+  error: function (err) {
+    console.error("Error loading data with PapaParse:", err);
+  }
+});

@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Social Media Dashboard</title>
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 
   <style>
-    /* Toggle Switch */
     .switch input { display: none; }
     .slider {
       cursor: pointer;
       width: 50px;
       height: 24px;
-      background-color: #9CA3AF;          /* gray-400: visible on white */
+      background-color: #9CA3AF;
       border-radius: 9999px;
       position: relative;
       transition: background-color 0.3s;
@@ -36,30 +37,18 @@
       transition: transform 0.3s;
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
-    /* Checked state */
     input:checked + .slider {
-      background-color: #2563EB;          /* blue-600 for light mode */
+      background-color: #2563EB;
     }
     input:checked + .slider::before {
       transform: translateX(26px);
     }
 
-    /* Dark-mode overrides */
-    .dark .slider {
-      background-color: #4B5563;          /* gray-600 on dark */
-    }
-    .dark input:checked + .slider {
-      background-color: #10B981;          /* green-500 on dark */
-    }
+    .dark .slider { background-color: #4B5563; }
+    .dark input:checked + .slider { background-color: #10B981; }
 
-    /* Dark Mode overall */
-    .dark body {
-      background-color: #1a202c;
-      color: #f7fafc;
-    }
-    .dark .bg-white {
-      background-color: #2d3748;
-    }
+    .dark body { background-color: #1a202c; color: #f7fafc; }
+    .dark .bg-white { background-color: #2d3748; }
     .dark .text-gray-800 { color: #f7fafc; }
     .dark .text-gray-500 { color: #cbd5e0; }
     .dark .text-gray-700 { color: #e2e8f0; }
@@ -98,15 +87,15 @@
     <!-- Main Content -->
     <main class="flex-1 p-6 space-y-6">
       <!-- Profile Card -->
-      <section class="flex items-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <img src="https://i.pravatar.cc/60" class="rounded-full w-16 h-16" alt="Profile Picture">
+      <section id="profile-card" class="flex items-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <img id="profile-img" src="https://i.pravatar.cc/60" class="rounded-full w-16 h-16" alt="Profile Picture">
         <div>
-          <h2 class="text-xl font-semibold dark:text-gray-100">Harshit</h2>
+          <h2 id="profile-name" class="text-xl font-semibold dark:text-gray-100">Loading...</h2>
           <p class="text-gray-500 dark:text-gray-400">Developer</p>
         </div>
       </section>
 
-      <!-- Charts Grid -->
+      <!-- Charts -->
       <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
           <h3 class="text-lg font-bold mb-2 dark:text-gray-100">Followers Over Time</h3>
@@ -130,12 +119,13 @@
       <section class="bg-white dark:bg-gray-800 p-4 rounded shadow">
         <h3 class="text-lg font-bold mb-4 dark:text-gray-100">Recent Notifications</h3>
         <ul id="notificationList" class="space-y-2">
-          <!-- Dynamic notifications will be inserted here -->
+          <!-- JS injects notifications here -->
         </ul>
       </section>
     </main>
   </div>
 
+  <!-- Script for theme, charts, notifications -->
   <script src="script.js"></script>
 </body>
 </html>
